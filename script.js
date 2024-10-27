@@ -1,67 +1,69 @@
-const addNoteBtn = document.getElementById('addNoteBtn');
-const noteText = document.getElementById('noteText');
-const notesContainer = document.getElementById('notesContainer');
-
-document.addEventListener('DOMContentLoaded', displayNotes);
-
-// Add or save note
-addNoteBtn.addEventListener('click', () => {
-  const noteContent = noteText.value.trim();
-  if (noteContent) {
-    if (addNoteBtn.dataset.editing) {
-      // Save the edited note
-      const index = addNoteBtn.dataset.editing;
-      saveEditedNote(index, noteContent);
-      delete addNoteBtn.dataset.editing;
-      addNoteBtn.textContent = 'Add Note';
-    } else {
-      // Add a new note
-      saveNote(noteContent);
+document.addEventListener("DOMContentLoaded", () => {
+    const noteText = document.getElementById("noteText");
+    const addNoteBtn = document.getElementById("addNoteBtn");
+    const notesContainer = document.getElementById("notesContainer");
+    const searchInput = document.getElementById("searchInput");
+  
+    let notes = [];
+  
+    function renderNotes(filteredNotes = notes) {
+      notesContainer.innerHTML = ""; // Clear previous notes
+      filteredNotes.forEach((note, index) => {
+        const noteDiv = document.createElement("div");
+        noteDiv.className = "note";
+  
+        const noteContent = document.createElement("p");
+        noteContent.className = "note-text";
+        noteContent.innerText = note;
+  
+        const editBtn = document.createElement("button");
+        editBtn.className = "edit-btn";
+        editBtn.innerText = "Edit";
+        editBtn.addEventListener("click", () => editNote(index));
+  
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "delete-btn";
+        deleteBtn.innerText = "Delete";
+        deleteBtn.addEventListener("click", () => deleteNote(index));
+  
+        noteDiv.appendChild(noteContent);
+        noteDiv.appendChild(editBtn);
+        noteDiv.appendChild(deleteBtn);
+  
+        notesContainer.appendChild(noteDiv);
+      });
     }
-    noteText.value = '';
-    displayNotes();
-  }
+  
+    function addNote() {
+      const note = noteText.value.trim();
+      if (note) {
+        notes.push(note);
+        noteText.value = "";
+        renderNotes();
+      }
+    }
+  
+    function editNote(index) {
+      const newNote = prompt("Edit your note:", notes[index]);
+      if (newNote !== null) {
+        notes[index] = newNote.trim();
+        renderNotes();
+      }
+    }
+  
+    function deleteNote(index) {
+      notes.splice(index, 1);
+      renderNotes();
+    }
+  
+    // Filter notes based on search query
+    function searchNotes(query) {
+      const filteredNotes = notes.filter(note => note.toLowerCase().includes(query.toLowerCase()));
+      renderNotes(filteredNotes);
+    }
+  
+    // Event listeners
+    addNoteBtn.addEventListener("click", addNote);
+    searchInput.addEventListener("input", (e) => searchNotes(e.target.value));
 });
-
-function saveNote(content) {
-  const notes = JSON.parse(localStorage.getItem('notes')) || [];
-  notes.push(content);
-  localStorage.setItem('notes', JSON.stringify(notes));
-}
-
-function saveEditedNote(index, content) {
-  const notes = JSON.parse(localStorage.getItem('notes')) || [];
-  notes[index] = content;
-  localStorage.setItem('notes', JSON.stringify(notes));
-}
-
-function displayNotes() {
-  notesContainer.innerHTML = '';
-  const notes = JSON.parse(localStorage.getItem('notes')) || [];
-  notes.forEach((note, index) => {
-    const noteElement = document.createElement('div');
-    noteElement.classList.add('note');
-
-    noteElement.innerHTML = `
-      <span class="note-text">${note}</span>
-      <button class="edit-btn" onclick="editNote(${index})">Edit</button>
-      <button class="delete-btn" onclick="deleteNote(${index})">Delete</button>
-    `;
-
-    notesContainer.appendChild(noteElement);
-  });
-}
-
-function deleteNote(index) {
-  const notes = JSON.parse(localStorage.getItem('notes')) || [];
-  notes.splice(index, 1);
-  localStorage.setItem('notes', JSON.stringify(notes));
-  displayNotes();
-}
-
-function editNote(index) {
-  const notes = JSON.parse(localStorage.getItem('notes')) || [];
-  noteText.value = notes[index];
-  addNoteBtn.textContent = 'Save Note';
-  addNoteBtn.dataset.editing = index;
-}
+  
